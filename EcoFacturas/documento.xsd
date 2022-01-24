@@ -1,0 +1,788 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="FEL" xmlns="FEL">
+  <xs:element name="stdTWS">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="1" name="TrnEstNum">
+            <xs:annotation>
+                <xs:documentation>Codigo del establecimiento</xs:documentation>
+            </xs:annotation>
+			<xs:simpleType>
+		          <xs:restriction base="xs:positiveInteger">
+		              <xs:minInclusive value="1"/>
+		              <xs:maxInclusive value="9999"/>
+		          </xs:restriction>
+		      </xs:simpleType>
+        </xs:element>
+        <xs:element minOccurs="1" maxOccurs="1" name="TipTrnCod" type="TiposDocumentos">
+            <xs:annotation>
+                <xs:documentation>Tipo de documento a emitir</xs:documentation>
+            </xs:annotation>
+        </xs:element>
+        <xs:element minOccurs="1" maxOccurs="1" name="TrnNum">
+			<xs:annotation>
+	          <xs:documentation>Número de transacción, puede ser del 1 al 9999999999, solo se validará que no esté ya registrada esa transacción, el emisor determina el orden de envió.</xs:documentation>
+	      </xs:annotation>
+	      <xs:simpleType>
+	          <xs:restriction base="xs:positiveInteger">
+	              <xs:minInclusive value="1"/>
+	              <xs:maxInclusive value="9999999999"/>
+	          </xs:restriction>
+	      </xs:simpleType>
+        </xs:element>
+        <xs:element minOccurs="1" maxOccurs="1" name="TrnFec" type="Fecha">
+            <xs:annotation>
+                <xs:documentation>Fecha de emisión del documento, no puede ser emitida con mas de 5 días atrás y no puede ser con fecha de mes siguiente.</xs:documentation>
+            </xs:annotation>
+        </xs:element>
+        <xs:element minOccurs="1" maxOccurs="1" name="MonCod" type="Monedas">
+            <xs:annotation>
+                <xs:documentation>Código de Moneda ISO 4217</xs:documentation>
+            </xs:annotation>
+        </xs:element>
+        <xs:element minOccurs="1" maxOccurs="1" name="TrnBenConNIT" type="ReceptorID">
+            <xs:annotation>
+                <xs:documentation>CF, NIT/DPI/PASAPORTE del Receptor, Beneficiario o cliente del emisor, dependiendo del tipo de documento. DPI o CUI y Pasaporte son receptores especiales. No debe contener guiones, espacios u otros caracteres especiales.</xs:documentation>
+            </xs:annotation>
+        </xs:element>
+		<xs:element minOccurs="0" maxOccurs="1" name="TrnBenConEspecial" type="ReceptorEspecial">
+		    <xs:annotation>
+		        <xs:documentation>Marcar para identificar si es DPI/CUI o Pasaporte, solo aplica para las facturas especiales.</xs:documentation>
+		    </xs:annotation>
+		</xs:element>
+        <xs:element minOccurs="0" maxOccurs="1" name="TrnExp">
+            <xs:annotation>
+                <xs:documentation>Marcar para identificar que el documento es una exportación. En la etiqueta TrnBenConNIT se debe de colocar CF. Es para facturas y facturas cambiarias.</xs:documentation>
+            </xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:integer">
+	              <xs:minInclusive value="0"/>
+	              <xs:maxInclusive value="1"/>
+	          	</xs:restriction>
+			</xs:simpleType>
+        </xs:element>
+        <xs:element minOccurs="0" maxOccurs="1" name="TrnExento">
+            <xs:annotation>
+                <xs:documentation>Marcar 1 para generar el documento exento de IVA, si se marca como exento se debe colocar la frase y escenario del motivo por que está exento el documento.</xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+                <xs:restriction base="xs:integer">
+                    <xs:minInclusive value="0"/>
+                    <xs:maxInclusive value="1"/>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:element>
+        <xs:element minOccurs="0" maxOccurs="1" name="TrnFraseTipo">
+            <xs:annotation>
+                <xs:documentation>Frase de exento o no afecto al IVA. Se debe colocar cuando el documento está marcado como exento de IVA. Solo aplica para régimen General.</xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+                <xs:restriction base="xs:integer">
+                    <xs:enumeration value="0"/>
+                    <xs:enumeration value="4"/>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:element>
+        <xs:element minOccurs="0" maxOccurs="1" name="TrnEscCod">
+            <xs:annotation>
+                <xs:documentation>El escenario es para especificar el motivo por el cual el documento esta exento de IVA, ver referencia de todos los escenarios en el manual.</xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+                <xs:restriction base="xs:integer">
+                    <xs:minInclusive value="0"/>
+                    <xs:maxInclusive value="18"/>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:element>
+        <xs:element minOccurs="0" maxOccurs="1" name="TrnEFACECliCod">
+            <xs:annotation>
+                <xs:documentation>Cuando el documento esta marcado como una exportación, aquí se debe colocar el código del comprador. Solo se tomará en cuenta cuando sea exportación.</xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+                <xs:restriction base="xs:string">
+                    <xs:minLength value="0"/>
+                    <xs:maxLength value="17"/>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:element>
+        <xs:element minOccurs="0" maxOccurs="1" name="TrnEFACECliNom">
+            <xs:annotation>
+                <xs:documentation>Nombre del cliente, puede ser utilizado para exportación o CF, en una exportación es el Nombre comprador, con CF sustituye el nombre CONSUMIDOR FINAL.</xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+                <xs:restriction base="xs:string">
+                    <xs:minLength value="0"/>
+                    <xs:maxLength value="150"/>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:element>
+        <xs:element minOccurs="0" maxOccurs="1" name="TrnEFACECliDir">
+            <xs:annotation>
+                <xs:documentation>Dirección del cliente se puede utilizar en CF, Exportación, CUI, Pasaporte y NIT, se debe colocar la dirección que le proporcione el cliente, si de deja en blanco el documento aparecerá con dirección ciudad.</xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+                <xs:restriction base="xs:string">
+                    <xs:minLength value="0"/>
+                    <xs:maxLength value="150"/>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:element>
+        <xs:element minOccurs="0" maxOccurs="1" name="TrnObs">
+            <xs:annotation>
+                <xs:documentation>Observaciones para el documento. Solo aparecera si el diseño tiene el campo para mostrar la observaciones.</xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+                <xs:restriction base="xs:string">
+                    <xs:minLength value="0"/>
+                    <xs:maxLength value="1500"/>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:element>
+        <xs:element minOccurs="0" maxOccurs="1" name="TrnEmail">
+            <xs:annotation>
+                <xs:documentation>Correo electrónico del receptor (cliente). Puede contener varios correos, se separa con punto y coma (;).</xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+                <xs:restriction base="xs:string">
+                    <xs:minLength value="0"/>
+                    <xs:maxLength value="100"/>
+                    <xs:whiteSpace value="collapse"/>
+                    <xs:pattern value="((\w[-+._\w]+@\w[-.\w]+\.\w[-.\w]+)(;?))*"/>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:element>
+        <xs:element minOccurs="0" maxOccurs="1" name="TrnCampAd01" type="CampoAdicional">
+            <xs:annotation>
+                <xs:documentation>Campo adicional 1</xs:documentation>
+            </xs:annotation>
+        </xs:element>
+        <xs:element name="TrnCampAd02" minOccurs="0" maxOccurs="1" type="CampoAdicional">
+            <xs:annotation>
+                <xs:documentation>Campo adicional 2</xs:documentation>
+            </xs:annotation>
+        </xs:element>
+        <xs:element name="TrnCampAd03" minOccurs="0" maxOccurs="1" type="CampoAdicional">
+            <xs:annotation>
+                <xs:documentation>Campo adicional 3</xs:documentation>
+            </xs:annotation>
+        </xs:element>
+        <xs:element name="TrnCampAd04" minOccurs="0" maxOccurs="1" type="CampoAdicional">
+            <xs:annotation>
+                <xs:documentation>Campo adicional 4</xs:documentation>
+            </xs:annotation>
+        </xs:element>
+        <xs:element name="TrnCampAd05" minOccurs="0" maxOccurs="1" type="CampoAdicional">
+            <xs:annotation>
+                <xs:documentation>Campo adicional 5</xs:documentation>
+            </xs:annotation>
+        </xs:element>
+        <xs:element name="TrnCampAd06" minOccurs="0" maxOccurs="1" type="CampoAdicional">
+            <xs:annotation>
+                <xs:documentation>Campo adicional 6</xs:documentation>
+            </xs:annotation>
+        </xs:element>
+        <xs:element name="TrnCampAd07" minOccurs="0" maxOccurs="1" type="CampoAdicional">
+            <xs:annotation>
+                <xs:documentation>Campo adicional 7</xs:documentation>
+            </xs:annotation>
+        </xs:element>
+        <xs:element name="TrnCampAd08" minOccurs="0" maxOccurs="1" type="CampoAdicional">
+            <xs:annotation>
+                <xs:documentation>Campo adicional 8</xs:documentation>
+            </xs:annotation>
+        </xs:element>
+        <xs:element name="TrnCampAd09" minOccurs="0" maxOccurs="1" type="CampoAdicional">
+            <xs:annotation>
+                <xs:documentation>Campo adicional 9</xs:documentation>
+            </xs:annotation>
+        </xs:element>
+        <xs:element name="TrnCampAd10" minOccurs="0" maxOccurs="1" type="CampoAdicional">
+            <xs:annotation>
+                <xs:documentation>Campo adicional 10</xs:documentation>
+            </xs:annotation>
+        </xs:element>
+        <xs:element name="TrnCampAd11" minOccurs="0" maxOccurs="1" type="CampoAdicional">
+            <xs:annotation>
+                <xs:documentation>Campo adicional 11</xs:documentation>
+            </xs:annotation>
+        </xs:element>
+        <xs:element name="TrnCampAd12" minOccurs="0" maxOccurs="1" type="CampoAdicional">
+            <xs:annotation>
+                <xs:documentation>Campo adicional 12</xs:documentation>
+            </xs:annotation>
+        </xs:element>
+        <xs:element name="TrnCampAd13" minOccurs="0" maxOccurs="1" type="CampoAdicional">
+            <xs:annotation>
+                <xs:documentation>Campo adicional 13</xs:documentation>
+            </xs:annotation>
+        </xs:element>
+        <xs:element name="TrnCampAd14" minOccurs="0" maxOccurs="1" type="CampoAdicional">
+            <xs:annotation>
+                <xs:documentation>Campo adicional 14</xs:documentation>
+            </xs:annotation>
+        </xs:element>
+        <xs:element name="TrnCampAd15" minOccurs="0" maxOccurs="1" type="CampoAdicional">
+            <xs:annotation>
+                <xs:documentation>Campo adicional 15</xs:documentation>
+            </xs:annotation>
+        </xs:element>
+        <xs:element name="TrnCampAd16" minOccurs="0" maxOccurs="1" type="CampoAdicional">
+            <xs:annotation>
+                <xs:documentation>Campo adicional 16</xs:documentation>
+            </xs:annotation>
+        </xs:element>
+        <xs:element name="TrnCampAd17" minOccurs="0" maxOccurs="1" type="CampoAdicional">
+            <xs:annotation>
+                <xs:documentation>Campo adicional 17</xs:documentation>
+            </xs:annotation>
+        </xs:element>
+        <xs:element name="TrnCampAd18" minOccurs="0" maxOccurs="1" type="CampoAdicional">
+            <xs:annotation>
+                <xs:documentation>Campo adicional 18</xs:documentation>
+            </xs:annotation>
+        </xs:element>
+        <xs:element name="TrnCampAd19" minOccurs="0" maxOccurs="1" type="CampoAdicional">
+            <xs:annotation>
+                <xs:documentation>Campo adicional 19</xs:documentation>
+            </xs:annotation>
+        </xs:element>
+        <xs:element name="TrnCampAd20" minOccurs="0" maxOccurs="1" type="CampoAdicional">
+            <xs:annotation>
+                <xs:documentation>Campo adicional 20</xs:documentation>
+            </xs:annotation>
+        </xs:element>
+        <xs:element name="TrnCampAd21" minOccurs="0" maxOccurs="1" type="CampoAdicional">
+            <xs:annotation>
+                <xs:documentation>Campo adicional 21</xs:documentation>
+            </xs:annotation>
+        </xs:element>
+        <xs:element name="TrnCampAd22" minOccurs="0" maxOccurs="1" type="CampoAdicional">
+            <xs:annotation>
+                <xs:documentation>Campo adicional 22</xs:documentation>
+            </xs:annotation>
+        </xs:element>
+        <xs:element name="TrnCampAd23" minOccurs="0" maxOccurs="1" type="CampoAdicional">
+            <xs:annotation>
+                <xs:documentation>Campo adicional 23</xs:documentation>
+            </xs:annotation>
+        </xs:element>
+        <xs:element name="TrnCampAd24" minOccurs="0" maxOccurs="1" type="CampoAdicional">
+            <xs:annotation>
+                <xs:documentation>Campo adicional 24</xs:documentation>
+            </xs:annotation>
+        </xs:element>
+        <xs:element name="TrnCampAd25" minOccurs="0" maxOccurs="1" type="CampoAdicional">
+            <xs:annotation>
+                <xs:documentation>Campo adicional 25</xs:documentation>
+            </xs:annotation>
+        </xs:element>
+        <xs:element name="TrnCampAd26" minOccurs="0" maxOccurs="1" type="CampoAdicional">
+            <xs:annotation>
+                <xs:documentation>Campo adicional 26</xs:documentation>
+            </xs:annotation>
+        </xs:element>
+        <xs:element name="TrnCampAd27" minOccurs="0" maxOccurs="1" type="CampoAdicional">
+            <xs:annotation>
+                <xs:documentation>Campo adicional 27</xs:documentation>
+            </xs:annotation>
+        </xs:element>
+        <xs:element name="TrnCampAd28" minOccurs="0" maxOccurs="1" type="CampoAdicional">
+            <xs:annotation>
+                <xs:documentation>Campo adicional 28</xs:documentation>
+            </xs:annotation>
+        </xs:element>
+        <xs:element name="TrnCampAd29" minOccurs="0" maxOccurs="1" type="CampoAdicional">
+            <xs:annotation>
+                <xs:documentation>Campo adicional 29</xs:documentation>
+            </xs:annotation>
+        </xs:element>
+        <xs:element name="TrnCampAd30" minOccurs="0" maxOccurs="1" type="CampoAdicional">
+            <xs:annotation>
+                <xs:documentation>Campo adicional 30</xs:documentation>
+            </xs:annotation>
+        </xs:element>
+        <xs:element name="stdTWSD" minOccurs="1" maxOccurs="1">
+			<xs:annotation>
+		        <xs:documentation>Detalle del documento, debe contener por lo menos un ítem.</xs:documentation>
+		    </xs:annotation>
+			<xs:complexType>
+				<xs:sequence>
+					<xs:element maxOccurs="unbounded" name="stdTWS.stdTWSCIt.stdTWSDIt" minOccurs="1">
+					    <xs:annotation>
+					        <xs:documentation>Ítems del documento.</xs:documentation>
+					    </xs:annotation>
+					    <xs:complexType>
+					      <xs:sequence>
+					        <xs:element name="TrnLiNum" minOccurs="1" maxOccurs="1">
+					            <xs:annotation>
+					                <xs:documentation>Número de línea del ítem.</xs:documentation>
+					            </xs:annotation>
+								<xs:simpleType>
+									<xs:restriction base="xs:positiveInteger">
+									    <xs:minInclusive value="1"/>
+									    <xs:maxInclusive value="9999"/>
+									</xs:restriction>
+								</xs:simpleType>
+					        </xs:element>
+					        <xs:element name="TrnArtCod" minOccurs="0" maxOccurs="1">
+					            <xs:annotation>
+					                <xs:documentation>Código del artículo, puede utilizarse o no, sirve para llenar catalogo de artículos, se actualizará la descripción del articulo por cada nuevo documento que lo utilice.</xs:documentation>
+					            </xs:annotation>
+								<xs:simpleType>
+									<xs:restriction base="xs:string">
+										<xs:minLength value="0"/>
+										<xs:maxLength value="50"/>
+									</xs:restriction>
+								</xs:simpleType>
+					        </xs:element>
+					        <xs:element name="TrnArtNom" minOccurs="1" maxOccurs="1">
+					            <xs:annotation>
+					                <xs:documentation>Nombre del artículo, nombre del bien o servicio, concepto la línea.</xs:documentation>
+					            </xs:annotation>
+					            <xs:simpleType>
+					                <xs:restriction base="xs:string">
+					                    <xs:minLength value="1"/>
+					                    <xs:maxLength value="1500"/>
+					                </xs:restriction>
+					            </xs:simpleType>
+					        </xs:element>
+					        <xs:element name="TrnCan" minOccurs="1" maxOccurs="1">
+					            <xs:annotation>
+					                <xs:documentation>Cantidad de artículos, cantidad de bienes o servicios.</xs:documentation>
+					            </xs:annotation>
+								<xs:simpleType>
+									<xs:restriction base="xs:decimal">
+										<xs:fractionDigits value="6"/>
+										<xs:totalDigits value="14"/>
+										<xs:minInclusive value="0.000001"/>
+									</xs:restriction>
+								</xs:simpleType>
+					        </xs:element>
+					        <xs:element name="TrnVUn" minOccurs="1" maxOccurs="1">
+					            <xs:annotation>
+					                <xs:documentation>Valor unitario del ítem, bien o servicio. El valor debe incluir el IVA si es de régimen General.</xs:documentation>
+					            </xs:annotation>
+					            <xs:simpleType>
+					                <xs:restriction base="xs:decimal">
+					                    <xs:minInclusive value="0.000001"/>
+					                    <xs:fractionDigits value="6"/>
+					                    <xs:totalDigits value="16"/>
+					                </xs:restriction>
+					            </xs:simpleType>
+					        </xs:element>
+					        <xs:element name="TrnUniMed" minOccurs="1" maxOccurs="1">
+					            <xs:annotation>
+					                <xs:documentation>Unidad de medida del artículo, bien o servicio. Ejemplo: UNI de unidad, KGS de kilogramos, LTS de litros. Cuando se envia a SAT solo se toman los primer 3 caracteres.</xs:documentation>
+					            </xs:annotation>
+					            <xs:simpleType>
+					                <xs:restriction base="xs:string">
+					                    <xs:minLength value="3"/>
+					                    <xs:maxLength value="20"/>
+					                </xs:restriction>
+					            </xs:simpleType>
+					        </xs:element>
+					        <xs:element name="TrnVDes" minOccurs="1" maxOccurs="1">
+					            <xs:annotation>
+					                <xs:documentation>Descuento del artículo, bien o servicio.</xs:documentation>
+					            </xs:annotation>
+					            <xs:simpleType>
+					                <xs:restriction base="xs:decimal">
+					                    <xs:fractionDigits value="2"/>
+					                    <xs:totalDigits value="12"/>
+					                    <xs:minInclusive value="0"/>
+									</xs:restriction>
+					            </xs:simpleType>
+					        </xs:element>
+					        <xs:element name="TrnArtBienSer">
+					            <xs:annotation>
+					                <xs:documentation>Especificar si el articulo(ítem) es un bien o un servicio.</xs:documentation>
+					            </xs:annotation>
+					            <xs:simpleType>
+					                <xs:restriction base="xs:string">
+					                    <xs:annotation>
+					                        <xs:documentation>B: Bien</xs:documentation>
+					                        <xs:documentation>S: Servicio</xs:documentation>
+					                    </xs:annotation>
+					                    <xs:enumeration value="B"/>
+					                    <xs:enumeration value="S"/>
+					                </xs:restriction>
+					            </xs:simpleType>
+					        </xs:element>
+					        <xs:element name="TrnArtImpAdiCod">
+					            <xs:annotation>
+					                <xs:documentation>Si el producto en la línea se tiene que calcular otro impuesto a parte del IVA.</xs:documentation>
+					            </xs:annotation>
+					            <xs:simpleType>
+					                <xs:restriction base="xs:integer">
+										<xs:annotation>
+										    <xs:documentation>Ver manual los codigos del impuesto</xs:documentation>
+										</xs:annotation>
+										<xs:enumeration value="0"/>
+										<xs:enumeration value="2"/>
+										<xs:enumeration value="3"/>
+										<xs:enumeration value="4"/>
+										<xs:enumeration value="5"/>
+										<xs:enumeration value="6"/>
+										<xs:enumeration value="7"/>
+					                </xs:restriction>
+					            </xs:simpleType>
+					        </xs:element>
+					        <xs:element name="TrnArtImpAdiUniGrav">
+					            <xs:annotation>
+					                <xs:documentation>Unidad gravable del impuesto adicional.</xs:documentation>
+					            </xs:annotation>
+					            <xs:simpleType>
+					                <xs:restriction base="xs:integer">
+										<xs:annotation>
+											<xs:documentation>La unidad gravable del impuesto ya sea por porcentaje o tasa especifica. Ver manual para la referencia de cada unidad gravable de cada impuesto.</xs:documentation>
+										</xs:annotation>
+					                    <xs:minInclusive value="0"/>
+										<xs:maxInclusive value="20"/>
+					                </xs:restriction>
+					            </xs:simpleType>
+					        </xs:element>
+							<xs:element name="TrnArtImpAdiMonto" minOccurs="0" maxOccurs="1">
+					            <xs:annotation>
+					                <xs:documentation>Monto del impuesto. Solo aplica para el impuesto Municipal.</xs:documentation>
+					            </xs:annotation>
+					            <xs:simpleType>
+					                <xs:restriction base="xs:float">
+										<xs:annotation>
+											<xs:documentation>La unidad gravable del impuesto ya sea por porcentaje o tasa especifica. Ver manual para la referencia de cada unidad gravable de cada impuesto.</xs:documentation>
+										</xs:annotation>
+										<xs:minInclusive value="0"/></xs:restriction>
+					            </xs:simpleType>
+					        </xs:element>
+					        <xs:element name="TrnDetCampAdi01" minOccurs="0" maxOccurs="1" type="CampoAdicional">
+					            <xs:annotation>
+					                <xs:documentation>Campo adicional 1 del ítem.</xs:documentation>
+					            </xs:annotation>
+					        </xs:element>
+					        <xs:element name="TrnDetCampAdi02" minOccurs="0" maxOccurs="1" type="CampoAdicional">
+					            <xs:annotation>
+					                <xs:documentation>Campo adicional 2 del ítem.</xs:documentation>
+					            </xs:annotation>
+					        </xs:element>
+					        <xs:element name="TrnDetCampAdi03" minOccurs="0" maxOccurs="1" type="CampoAdicional">
+					            <xs:annotation>
+					                <xs:documentation>Campo adicional 3 del ítem.</xs:documentation>
+					            </xs:annotation>
+					        </xs:element>
+					        <xs:element name="TrnDetCampAdi04" minOccurs="0" maxOccurs="1" type="CampoAdicional">
+					            <xs:annotation>
+					                <xs:documentation>Campo adicional 4 del ítem.</xs:documentation>
+					            </xs:annotation>
+					        </xs:element>
+					        <xs:element name="TrnDetCampAdi05" minOccurs="0" maxOccurs="1" type="CampoAdicional">
+					            <xs:annotation>
+					                <xs:documentation>Campo adicional 5 del ítem.</xs:documentation>
+					            </xs:annotation>
+					        </xs:element>
+					      </xs:sequence>
+					    </xs:complexType>
+					</xs:element>
+				</xs:sequence>
+			</xs:complexType>
+		</xs:element>
+        <xs:element name="stdTWSNota" minOccurs="0" maxOccurs="1">
+			<xs:annotation>
+			    <xs:documentation>Sección para la referencia de la nota de crédito o débito.</xs:documentation>
+			</xs:annotation>
+			<xs:complexType>
+				<xs:sequence maxOccurs="1" minOccurs="1">
+					<xs:element name="stdTWS.stdTWSNota.stdTWSNotaIt" maxOccurs="1" minOccurs="1">
+						<xs:annotation>
+							<xs:documentation>Datos para la referencia de Nota de Crédito o Débito.</xs:documentation>
+						</xs:annotation>
+						<xs:complexType>
+							<xs:sequence>
+								<xs:element name="TDFEPRegimenAntiguo">
+									<xs:annotation>
+										<xs:documentation>Si la nota de crédito o débito se aplica a un documento del régimen antiguo FACE.</xs:documentation>
+									</xs:annotation>
+									<xs:simpleType>
+									    <xs:restriction base="xs:integer">
+									        <xs:annotation>
+									            <xs:documentation>0: Régimen FEL</xs:documentation>
+												<xs:documentation>1: Régimen Antiguo FACE</xs:documentation>
+									        </xs:annotation>
+									        <xs:enumeration value="0"/>
+									        <xs:enumeration value="1"/>
+									    </xs:restriction>
+									</xs:simpleType>
+								</xs:element>
+								<xs:element name="TDFEPAutorizacion">
+									<xs:annotation>
+										<xs:documentation>Régimen FEL número de autorización (UUID). Régimen antiguo FACE1 numero de resolución o autorización.</xs:documentation>
+									</xs:annotation>
+									<xs:simpleType>
+									    <xs:restriction base="xs:string">
+									        <xs:pattern value="[0-9A-F]{8}-([0-9A-F]{4}-){3}[0-9A-F]{12}|([1-2]{1}[0-9]{3}-[1-9]{1}[0-9]{0,2}-[1-9]{1}[0-9]{0,6}-[1-9]{1}[0-9]{0,6})"/>
+									    </xs:restriction>
+									</xs:simpleType>
+								</xs:element>
+								<xs:element name="TDFEPSerie">
+									<xs:annotation>
+										<xs:documentation>Número de serie del documento de referencia</xs:documentation>
+									</xs:annotation>
+									<xs:simpleType>
+									    <xs:restriction base="xs:string">
+									        <xs:minLength value="1"/>
+									        <xs:maxLength value="10"/>
+									    </xs:restriction>
+									</xs:simpleType>
+								</xs:element>
+								<xs:element name="TDFEPNumero" type="xs:positiveInteger">
+									<xs:annotation>
+										<xs:documentation>Número del documento de referencia. Si es para régimen antiguo el número tiene que estar dentro del rango de la resolución.</xs:documentation>
+									</xs:annotation>
+								</xs:element>
+								<xs:element name="TDFEPFecEmision" type="Fecha">
+									<xs:annotation>
+										<xs:documentation>Fecha de emisión del documento de referencia.</xs:documentation>
+									</xs:annotation>
+								</xs:element>
+							</xs:sequence>
+						</xs:complexType>
+					</xs:element>
+				</xs:sequence>
+			</xs:complexType>
+		</xs:element>
+        <xs:element name="stdTWSCam" minOccurs="0" maxOccurs="1">
+            <xs:annotation>
+                <xs:documentation>Seccion para factura cambiaria. Complemento de abonos. Debe contener por lo menos 1</xs:documentation>
+            </xs:annotation>
+			<xs:complexType>
+				<xs:sequence>
+					<xs:element maxOccurs="unbounded" name="stdTWS.stdTWSCam.stdTWSCamIt" minOccurs="1">
+						<xs:annotation>
+							<xs:documentation>Ítem - Abono</xs:documentation>
+						</xs:annotation>
+						<xs:complexType>
+							<xs:sequence>
+								<xs:element name="TrnAbonoNum">
+									<xs:annotation>
+										<xs:documentation>Numero de abono.</xs:documentation>
+									</xs:annotation>
+									<xs:simpleType>
+									    <xs:restriction base="xs:positiveInteger">
+									        <xs:totalDigits value="3"/>
+									    </xs:restriction>
+									</xs:simpleType>
+								</xs:element>
+								<xs:element name="TrnAbonoFecVen" type="Fecha">
+									<xs:annotation>
+										<xs:documentation>Fecha de vencimiento del Abono.</xs:documentation>
+									</xs:annotation>
+								</xs:element>
+								<xs:element name="TrnAbonoMonto">
+									<xs:annotation>
+										<xs:documentation>Monto del Abono.</xs:documentation>
+									</xs:annotation>
+									<xs:simpleType>
+									    <xs:restriction base="xs:float">
+									        <xs:minInclusive value="0"/>
+									    </xs:restriction>
+									</xs:simpleType>
+								</xs:element>
+							</xs:sequence>
+						</xs:complexType>
+					</xs:element>
+				</xs:sequence>
+			</xs:complexType>
+        </xs:element>
+        <xs:element name="stdTWSExp" minOccurs="0" maxOccurs="1">
+			<xs:annotation>
+				<xs:documentation>Sección para factura como exportación. Complemento para exportación.</xs:documentation>
+			</xs:annotation>
+			<xs:complexType>
+				<xs:sequence>
+					<xs:element name="stdTWS.stdTWSExp.stdTWSExpIt" minOccurs="1" maxOccurs="1">
+						<xs:annotation>
+							<xs:documentation>Información para la exportación. Solo puede haber una.</xs:documentation>
+						</xs:annotation>
+						<xs:complexType>
+							<xs:sequence>
+								<xs:element name="NomConsigODest">
+									<xs:annotation>
+										<xs:documentation>Nombre del consignatario o destino.</xs:documentation>
+									</xs:annotation>
+									<xs:simpleType>
+									    <xs:restriction base="xs:string">
+									        <xs:minLength value="1"/>
+									        <xs:maxLength value="70"/>
+									    </xs:restriction>
+									</xs:simpleType>
+								</xs:element>
+								<xs:element name="DirConsigODest">
+									<xs:annotation>
+										<xs:documentation>Dirección del consignatario o destino.</xs:documentation>
+									</xs:annotation>
+									<xs:simpleType>
+									    <xs:restriction base="xs:string">
+									        <xs:minLength value="1"/>
+									        <xs:maxLength value="70"/>
+									    </xs:restriction>
+									</xs:simpleType>
+								</xs:element>
+								<xs:element name="CodConsigODest">
+									<xs:annotation>
+										<xs:documentation>Código del consignatario o destino.</xs:documentation>
+									</xs:annotation>
+									<xs:simpleType>
+									    <xs:restriction base="xs:string">
+									        <xs:minLength value="1"/>
+									        <xs:maxLength value="17"/>
+									    </xs:restriction>
+									</xs:simpleType>
+								</xs:element>
+								<xs:element name="OtraRef">
+									<xs:annotation>
+										<xs:documentation>Otra referencia.</xs:documentation>
+									</xs:annotation>
+									<xs:simpleType>
+									    <xs:restriction base="xs:string">
+									        <xs:minLength value="1"/>
+									        <xs:maxLength value="35"/>
+									    </xs:restriction>
+									</xs:simpleType>
+								</xs:element>
+								<xs:element name="INCOTERM" type="INCOTERM">
+									<xs:annotation>
+										<xs:documentation>INCOTERM - Lista de Edifcat.</xs:documentation>
+									</xs:annotation>
+								</xs:element>
+								<xs:element name="ExpNom">
+									<xs:annotation>
+										<xs:documentation>Nombre del exportador.</xs:documentation>
+									</xs:annotation>
+									<xs:simpleType>
+									    <xs:restriction base="xs:string">
+									        <xs:minLength value="1"/>
+									        <xs:maxLength value="70"/>
+									    </xs:restriction>
+									</xs:simpleType>
+								</xs:element>
+								<xs:element name="ExpCod">
+									<xs:annotation>
+										<xs:documentation>Código del exportador.</xs:documentation>
+									</xs:annotation>
+									<xs:simpleType>
+									    <xs:restriction base="xs:string">
+									        <xs:minLength value="1"/>
+									        <xs:maxLength value="17"/>
+									    </xs:restriction>
+									</xs:simpleType>
+								</xs:element>
+							</xs:sequence>
+						</xs:complexType>
+					</xs:element>
+				</xs:sequence>
+			</xs:complexType>
+		</xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:simpleType name="TiposDocumentos">
+      <xs:restriction base="xs:string">
+		  <xs:length value="4"/>
+		  <xs:enumeration value="FACT"/>
+          <xs:enumeration value="FCAM"/>
+          <xs:enumeration value="FPEQ"/>
+          <xs:enumeration value="FCAP"/>
+          <xs:enumeration value="FESP"/>
+          <xs:enumeration value="NABN"/>
+          <xs:enumeration value="RDON"/>
+          <xs:enumeration value="RECI"/>
+          <xs:enumeration value="NDEB"/>
+          <xs:enumeration value="NCRE"/>
+      </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="Monedas">
+      <xs:restriction base="xs:string">
+          <xs:length value="3"/>
+		  <xs:enumeration value="GTQ"/>
+		  <xs:enumeration value="USD"/>
+		  <xs:enumeration value="VES"/>
+		  <xs:enumeration value="CRC"/>
+		  <xs:enumeration value="SVC"/>
+		  <xs:enumeration value="NIO"/>
+		  <xs:enumeration value="DKK"/>
+		  <xs:enumeration value="NOK"/>
+		  <xs:enumeration value="SEK"/>
+		  <xs:enumeration value="CAD"/>
+		  <xs:enumeration value="HKD"/>
+		  <xs:enumeration value="TWD"/>
+		  <xs:enumeration value="PTE"/>
+		  <xs:enumeration value="EUR"/>
+		  <xs:enumeration value="CHF"/>
+		  <xs:enumeration value="HNL"/>
+		  <xs:enumeration value="GBP"/>
+		  <xs:enumeration value="ARS"/>
+		  <xs:enumeration value="DOP"/>
+		  <xs:enumeration value="COP"/>
+		  <xs:enumeration value="MXN"/>
+		  <xs:enumeration value="BRL"/>
+		  <xs:enumeration value="MYR"/>
+		  <xs:enumeration value="INR"/>
+		  <xs:enumeration value="PKR"/>
+		  <xs:enumeration value="KPW"/>
+		  <xs:enumeration value="JPY"/>
+      </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="ReceptorID">
+      <xs:restriction base="xs:string">
+          <xs:minLength value="1"/>
+          <xs:maxLength value="18"/>
+          <xs:pattern value="(([1-9])+([0-9])*([0-9]|K))|(([1-9]+[0-9]){12,13})|(CF)|^([A-Z0-9]{3,18})$"/>
+      </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="ReceptorEspecial">
+      <xs:restriction base="xs:positiveInteger">
+		  <xs:annotation>
+              <xs:documentation>1. NIT - Puede o no estar incluida la etiqueta.</xs:documentation>
+              <xs:documentation>2. CUI/DPI</xs:documentation>
+              <xs:documentation>3. Pasaporte</xs:documentation>
+          </xs:annotation>
+          <xs:enumeration value="1"/>
+          <xs:enumeration value="2"/>
+          <xs:enumeration value="3"/>
+      </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="INCOTERM">
+	<xs:restriction base="xs:string">
+		<xs:annotation>
+			<xs:documentation>Catálogo Edifcat</xs:documentation>
+		</xs:annotation>
+		<xs:enumeration value="EXW"/>
+		<xs:enumeration value="FCA"/>
+		<xs:enumeration value="FAS"/>
+		<xs:enumeration value="FOB"/>
+		<xs:enumeration value="CFR"/>
+		<xs:enumeration value="CIF"/>
+		<xs:enumeration value="CPT"/>
+		<xs:enumeration value="CIP"/>
+		<xs:enumeration value="DDP"/>
+		<xs:enumeration value="DAP"/>
+		<xs:enumeration value="DAT"/>
+		<xs:enumeration value="ZZZ"/>
+	</xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="Fecha">
+      <xs:annotation>
+          <xs:documentation>Formato 2020-12-30, yyyy-mm-dd</xs:documentation>
+      </xs:annotation>
+      <xs:restriction base="xs:string">
+          <xs:pattern value="((19|20)\d\d)-(0?[1-9]|1[012])-(0?[1-9]|[12][0-9]|3[01])"/>
+      </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="CampoAdicional">
+      <xs:annotation>
+          <xs:documentation>Datos adicionales para colocar información a la factura, según lo requiera el emisor en su plantilla de los documentos.</xs:documentation>
+      </xs:annotation>
+      <xs:restriction base="xs:string">
+          <xs:minLength value="0"/>
+          <xs:maxLength value="200"/>
+      </xs:restriction>
+  </xs:simpleType>
+</xs:schema>
