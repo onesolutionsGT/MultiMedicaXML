@@ -18,13 +18,13 @@ namespace SAP
             try
             {
                 SAPbobsCOM.Payments DocumentoPago = (SAPbobsCOM.Payments)B1company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.oIncomingPayments);
-                
+
                 double montoAplicado = 0.0;
                 DocumentoPago.DocDate = pago.DocDate;
                 DocumentoPago.CardCode = pago.CardCode;
                 DocumentoPago.Remarks = pago.Comentario;
                 DocumentoPago.DocCurrency = pago.Currency;
-                
+
                 if (pago.Rate > 0) DocumentoPago.DocRate = pago.Rate;
                 DocumentoPago.Series = 17;
 
@@ -38,7 +38,7 @@ namespace SAP
                     montoAplicado += pago.PagoTransferencia.TransferSum;
                 }
 
-                foreach(Modelos.Cheque cheque in pago.PagoCheque)
+                foreach (Modelos.Cheque cheque in pago.PagoCheque)
                 {
                     DocumentoPago.Checks.BankCode = cheque.BankCode;
                     DocumentoPago.Checks.CheckNumber = cheque.CheckNumber;
@@ -49,7 +49,7 @@ namespace SAP
                     DocumentoPago.Checks.Add();
                 }
 
-                foreach(Modelos.Tarjeta tarjeta in pago.PagoTarjeta)
+                foreach (Modelos.Tarjeta tarjeta in pago.PagoTarjeta)
                 {
                     DocumentoPago.CreditCards.CreditCard = tarjeta.CreditCard;
                     DocumentoPago.CreditCards.CreditCardNumber = tarjeta.CreditCardNumber;
@@ -60,7 +60,7 @@ namespace SAP
                     montoAplicado += tarjeta.CreditSum;
                 }
 
-               
+
                 DocumentoPago.Invoices.DocEntry = Convert.ToInt32(pago.DocEntry);
                 DocumentoPago.Invoices.InvoiceType = SAPbobsCOM.BoRcptInvTypes.it_Invoice;
                 DocumentoPago.Invoices.SumApplied = montoAplicado;
@@ -95,6 +95,9 @@ namespace SAP
 
         public Respuesta addPagoXML(ICompany B1company)
         {
+            string fileName = "";
+            int procesados = 0;
+            bool validacion_err = false;
             try
             {
                 DirectoryInfo d = new DirectoryInfo(@"C:\XML\Pagos\Cola");
@@ -102,120 +105,142 @@ namespace SAP
                 FileInfo[] Files = d.GetFiles("*.xml");
                 foreach (FileInfo file in Files)
                 {
+                    fileName = file.FullName;
                     XmlDocument xmlConsulta = new XmlDocument();
                     xmlConsulta.LoadXml(System.IO.File.ReadAllText(file.FullName));
                     SAPbobsCOM.Recordset RecSet = null;
                     SAPbobsCOM.Payments DocumentoPago = (SAPbobsCOM.Payments)B1company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.oIncomingPayments);
                     double montoAplicado = 0.0;
-                    DocumentoPago.DocDate = DateTime.ParseExact(GetElement(xmlConsulta, "//body/document/docdate"), "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None);                    
-                    DocumentoPago.CardCode = GetElement(xmlConsulta, "//body/document/cardcode"); //pago.CardCode;
-                    DocumentoPago.Remarks = GetElement(xmlConsulta, "//body/document/remarks");//pago.Comentario;
-                    DocumentoPago.DocCurrency = GetElement(xmlConsulta, "//body/document/doccurrency");                    
-                    DocumentoPago.Series =int.Parse( GetElement(xmlConsulta, "//body/document/series"));
+                    DocumentoPago.DocDate = DateTime.ParseExact(GetElement(xmlConsulta, "//items/document/DocDate"), "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None);
+                    DocumentoPago.CardCode = GetElement(xmlConsulta, "//items/document/cardcode"); //pago.CardCode;
+                    DocumentoPago.Remarks = GetElement(xmlConsulta, "//items/document/Remarks");//pago.Comentario;
+                    DocumentoPago.DocCurrency = GetElement(xmlConsulta, "//items/document/DocCur");
+                    //DocumentoPago.Series =int.Parse( GetElement(xmlConsulta, "//items/document/series"));
 
-                    if(!string.IsNullOrEmpty(GetElement(xmlConsulta, "//body/document/cashaccount")))
+                    if (!string.IsNullOrEmpty(GetElement(xmlConsulta, "//items/document/cashaccount")))
                     {
-                        DocumentoPago.CashAccount = GetElement(xmlConsulta, "//body/document/cashaccount");
-                        DocumentoPago.CashSum = double.Parse(GetElement(xmlConsulta, "//body/document/cashsum"));
-                        montoAplicado+= double.Parse(GetElement(xmlConsulta, "//body/document/cashsum"));
+                        DocumentoPago.CashAccount = "111102";
+                        DocumentoPago.CashSum = double.Parse(GetElement(xmlConsulta, "//items/document/cashsum"));
+                        montoAplicado += double.Parse(GetElement(xmlConsulta, "//items/document/cashsum"));
                     }
 
 
-                    if (!String.IsNullOrEmpty(GetElement(xmlConsulta, "//body/document/transferaccount")))
+                    if (!String.IsNullOrEmpty(GetElement(xmlConsulta, "//items/document/Trsfraccount")))
                     {
                         //DocumentoPago.TransferDate = pago.PagoTransferencia.TransferDate;
-                        DocumentoPago.TransferReference = GetElement(xmlConsulta, "//body/document/transferreference"); //pago.PagoTransferencia.TransferReference;
-                        DocumentoPago.TransferAccount = GetElement(xmlConsulta, "//body/document/transferaccount");// pago.PagoTransferencia.TransferAccount;
-                        DocumentoPago.TransferSum = double.Parse( GetElement(xmlConsulta, "//body/document/transfersum")); //pago.PagoTransferencia.TransferSum;
-                        montoAplicado += double.Parse(GetElement(xmlConsulta, "//body/document/transfersum")); //pago.PagoTransferencia.TransferSum;
+                        DocumentoPago.TransferReference = GetElement(xmlConsulta, "//items/document/TrsfrRef"); //pago.PagoTransferencia.TransferReference;
+                        DocumentoPago.TransferAccount = GetElement(xmlConsulta, "//items/document/Trsfraccount");// pago.PagoTransferencia.TransferAccount;
+                        DocumentoPago.TransferSum = double.Parse(GetElement(xmlConsulta, "//items/document/TrsfrSum")); //pago.PagoTransferencia.TransferSum;
+                        montoAplicado += double.Parse(GetElement(xmlConsulta, "//items/document/TrsfrSum")); //pago.PagoTransferencia.TransferSum;
                     }
 
 
-                    XmlNodeList nodeList = GetElementNode(xmlConsulta, "//body/document/document_lines/pay");
+                    XmlNodeList nodeList = GetElementNode(xmlConsulta, "//items/document/document_lines/Pay");
 
                     foreach (XmlNode nodo in nodeList)
                     {
-                        if (!String.IsNullOrEmpty(nodo["checknumber"].InnerText))
+                        if (!String.IsNullOrEmpty(nodo["CheckNumber"].InnerText))
                         {
-                            DocumentoPago.Checks.BankCode = nodo["bankcode"].InnerText; //cheque.BankCode;
-                            if(nodo["checknumber"].InnerText.Length >=10)
-                            DocumentoPago.Checks.CheckNumber = int.Parse( nodo["checknumber"].InnerText.Substring(0,9)); //cheque.CheckNumber;
-                            else                            
-                                DocumentoPago.Checks.CheckNumber = Convert.ToInt32(nodo["checknumber"].InnerText.ToString()); //cheque.CheckNumber;
+                            DocumentoPago.Checks.BankCode = nodo["BankCode"].InnerText; //cheque.BankCode;
+                            if (nodo["CheckNumber"].InnerText.Length >= 10)
+                                DocumentoPago.Checks.CheckNumber = int.Parse(nodo["CheckNumber"].InnerText.Substring(0, 9)); //cheque.CheckNumber;
+                            else
+                                DocumentoPago.Checks.CheckNumber = Convert.ToInt32(nodo["CheckNumber"].InnerText.ToString()); //cheque.CheckNumber;
 
-                            DocumentoPago.Checks.AccounttNum = nodo["accounttnum"].InnerText; //cheque.AccounttNum;
-                            DocumentoPago.Checks.CheckAccount = nodo["checkaccount"].InnerText;
-                            DocumentoPago.Checks.DueDate = DateTime.ParseExact(nodo["checkdate"].InnerText, "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None);
-                            DocumentoPago.Checks.CheckSum = double.Parse(nodo["checksum"].InnerText);//cheque.CheckSum;
-                            DocumentoPago.Checks.Details = nodo["checknumber"].InnerText;
-                            montoAplicado += double.Parse(nodo["checksum"].InnerText);
+                            //DocumentoPago.Checks.AccounttNum = nodo["accounttnum"].InnerText; //cheque.AccounttNum;
+                            //DocumentoPago.Checks.CheckAccount = nodo["checkaccount"].InnerText;
+                            //DocumentoPago.Checks.DueDate = DateTime.ParseExact(nodo["checkdate"].InnerText, "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None);
+                            DocumentoPago.Checks.CheckSum = double.Parse(nodo["CheckSum"].InnerText);//cheque.CheckSum;
+                            DocumentoPago.Checks.Details = nodo["CheckNumber"].InnerText;
+                            //montoAplicado += double.Parse(nodo["CheckSum"].InnerText);
                             DocumentoPago.Checks.Add();
-                        }                        
+                        }
                     }
 
                     foreach (XmlNode nodo in nodeList)
                     {
-                        if (!String.IsNullOrEmpty(nodo["creditcard"].InnerText))
+                        if (!String.IsNullOrEmpty(nodo["CreditCard"].InnerText))
                         {
-                            DocumentoPago.CreditCards.CreditCard = int.Parse(nodo["creditcard"].InnerText);//tarjeta.CreditCard;
-                            DocumentoPago.CreditCards.CreditCardNumber = nodo["creditcardnumber"].InnerText;//tarjeta.CreditCardNumber;
-                            DocumentoPago.CreditCards.CreditSum = double.Parse(nodo["creditsum"].InnerText);//tarjeta.CreditSum;
-                            DocumentoPago.CreditCards.VoucherNum = nodo["vouchernum"].InnerText;// tarjeta.VoucherNum;
-                            DocumentoPago.CreditCards.CardValidUntil = DateTime.ParseExact(nodo["cardvaliduntil"].InnerText, "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None);//tarjeta.CardValidUntil;
+                            DocumentoPago.CreditCards.CreditCard = int.Parse(nodo["CreditCard"].InnerText);//tarjeta.CreditCard;
+                            DocumentoPago.CreditCards.CreditCardNumber = nodo["CreditCardNumber"].InnerText;//tarjeta.CreditCardNumber;
+                            DocumentoPago.CreditCards.CreditSum = double.Parse(nodo["CreditSum"].InnerText);//tarjeta.CreditSum;
+                            DocumentoPago.CreditCards.VoucherNum = nodo["VoucherNum"].InnerText;// tarjeta.VoucherNum;
+                            DocumentoPago.CreditCards.CardValidUntil = DateTime.ParseExact(nodo["CardValidUntil"].InnerText, "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None);//tarjeta.CardValidUntil;
                             DocumentoPago.CreditCards.Add();
-                            montoAplicado += double.Parse(nodo["creditsum"].InnerText);//tarjeta.CreditSum;
+                            //montoAplicado += double.Parse(nodo["CreditSum"].InnerText);//tarjeta.CreditSum;
+                        }
+                    }
+
+
+                    XmlNodeList listNode = GetElementNode(xmlConsulta, "//items/document/document_lines/Line");
+
+                    foreach (XmlNode nodo in listNode)
+                    {
+                        if (!String.IsNullOrEmpty(nodo["SumApplied"].InnerText))
+                        {
+                            montoAplicado += double.Parse(nodo["SumApplied"].InnerText);//tarjeta.CreditSum;
                         }
                     }
 
                     RecSet = ((SAPbobsCOM.Recordset)(B1company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset)));
-                    string QryStr = "select top 1 T.\"DocEntry\", T.\"DocNum\" from oinv t where t.\"NumAtCard\" = '"+GetElement(xmlConsulta, "//body/document/document_lines/line/serie") +" - "+ GetElement(xmlConsulta, "//body/document/document_lines/line/docnum")+"'";
-                    RecSet.DoQuery(QryStr);                   
+                    string QryStr = "select top 1 T.\"DocEntry\", T.\"DocNum\" from oinv t where t.\"NumAtCard\" = '" + GetElement(xmlConsulta, "//items/document/document_lines/Line/Docnum") + "'";
+                    RecSet.DoQuery(QryStr);
 
-                    var documento = Convert.ToString(RecSet.Fields.Item(0).Value);
-                    DocumentoPago.Invoices.DocEntry = Convert.ToInt32(documento);
-                    DocumentoPago.Invoices.InvoiceType = SAPbobsCOM.BoRcptInvTypes.it_Invoice;
-                    DocumentoPago.Invoices.SumApplied = montoAplicado;
-                    DocumentoPago.Invoices.AppliedFC = montoAplicado;
-
-                    int resp = DocumentoPago.Add();
-                    if (resp != 0)
+                    if(RecSet.RecordCount == 0)
                     {
-                        string errMsg = B1company.GetLastErrorDescription();
-                        int ErrNo = B1company.GetLastErrorCode();
-                        //throw new Exception(" Error " + ErrNo + " Codigo " + errMsg);
-                        using (StreamWriter writer = File.AppendText(@"C:\XML\Pagos\PagosError\logError.txt"))
-                        {
-                            // var mensaje = data["Mensajes"][0];
-                            writer.WriteLine(ErrNo.ToString() + " - " + errMsg + " -- " + DateTime.Now.ToString() + " Xml pago" + "-- " + file.FullName);
-                            //File.Move(file.FullName, @"C:\XML\Pagos\PagosError\" + file.Name);
-                            writer.Close();
-                        }
-
+                        validacion_err = true;
+                        Log.logError("No hay factura asociada, ("+ GetElement(xmlConsulta, "//items/document/document_lines/Line/Docnum") +")", fileName, B1company);
                     }
                     else
                     {
-                        //System.Runtime.InteropServices.Marshal.ReleaseComObject(RecSet);
-                        // RecSet = null;
-                        // GC.Collect();
-                        File.Move(file.FullName, @"C:\XML\Pagos\Finalizados\" + file.Name);
-                    }  
-                    
+                        var documento = Convert.ToString(RecSet.Fields.Item(0).Value);
+                        DocumentoPago.Invoices.DocEntry = Convert.ToInt32(documento);
+                        DocumentoPago.Invoices.InvoiceType = SAPbobsCOM.BoRcptInvTypes.it_Invoice;
+                        DocumentoPago.Invoices.SumApplied = double.Parse(GetElement(xmlConsulta, "//items/document/document_lines/Line/SumApplied"));
+                        DocumentoPago.Invoices.AppliedFC = double.Parse(GetElement(xmlConsulta, "//items/document/document_lines/Line/SumApplied"));
+
+                        int resp = DocumentoPago.Add();
+                        if (resp != 0)
+                        {
+                            validacion_err = true;
+                            Log.logError("(" + B1company.GetLastErrorCode().ToString() + ") " + B1company.GetLastErrorDescription(), fileName, B1company);
+                        }
+                        else
+                        {
+                            File.Move(file.FullName, @"C:\XML\Pagos\Finalizados\" + file.Name);
+                            Log.logProc("PAGO", fileName, B1company);
+                            procesados++;
+                        }
+                    }
                 }
-               
-                return new Respuesta
+
+                if (validacion_err)
                 {
-                    Mensaje = $"Pago aplicado correctamente",
-                    Codigo = "0",
-                };
+                    return new Respuesta
+                    {
+                        Mensaje = $"Ocurrió un error, revisar SAP para mas detalles.",
+                    };
+                }
+                if (procesados == 0)
+                {
+                    return new Respuesta
+                    {
+                        Mensaje = "No hay documentos para procesar en la carpeta.",
+                        Codigo = "0",
+                    };
+                }
+                else
+                {
+                    return new Respuesta
+                    {
+                        Mensaje = "Documentos procesados exitosamente, #Procesados: " + procesados.ToString(),
+                        Codigo = "0",
+                    };
+                }
             }
             catch (Exception ex)
             {
-                using (StreamWriter writer = File.AppendText(@"C:\XML\Pagos\PagosError\logError.txt"))
-                {
-                    // var mensaje = data["Mensajes"][0];
-                    writer.WriteLine(ex.Message +" -- Error no controlado -- " + DateTime.Now.ToString());                    
-                    writer.Close();
-                }
+                Log.logError(ex.Message + "\n" + ex.InnerException, fileName, B1company);
                 throw new Exception(ex.Message, ex.InnerException);
             }
         }
