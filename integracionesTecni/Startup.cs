@@ -54,6 +54,8 @@ namespace integracionesTecni
             services.AddScoped<SAP.Interfaces.IPagoService, SAP.PagoService>();
             services.AddScoped<SAP.Interfaces.IFacturaService, SAP.FacturaService>();
             services.AddScoped<SAP.Interfaces.IContactoService, SAP.ContactoService>();
+            services.AddScoped<SAP.Interfaces.ISalidaService, SAP.SalidaService>();
+            services.AddScoped<SAP.Interfaces.IFacturaItemsService, SAP.FacturaItemsService>();
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "integracionesTecni", Version = "v1" });
