@@ -97,6 +97,8 @@ namespace SAP
         {
             string fileName = "";
             int procesados = 0;
+            int factura_DocEntry = 0;
+            int factura_DocNum = 0;
             bool validacion_err = false;
             try
             {
@@ -114,10 +116,18 @@ namespace SAP
                     DocumentoPago.DocDate = DateTime.ParseExact(GetElement(xmlConsulta, "//items/document/DocDate"), "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None);
                     DocumentoPago.CardCode = GetElement(xmlConsulta, "//items/document/cardcode"); //pago.CardCode;
                     DocumentoPago.Remarks = GetElement(xmlConsulta, "//items/document/Remarks");//pago.Comentario;
-                    DocumentoPago.DocCurrency = GetElement(xmlConsulta, "//items/document/DocCur");
+                    if(GetElement(xmlConsulta, "//items/document/DocCur") == "Q")
+                    {
+                        DocumentoPago.DocCurrency = "QTZ";
+                    }
+                    else
+                    {
+                        DocumentoPago.DocCurrency = GetElement(xmlConsulta, "//items/document/DocCur");
+                    }
+                    
                     //DocumentoPago.Series =int.Parse( GetElement(xmlConsulta, "//items/document/series"));
 
-                    if (!string.IsNullOrEmpty(GetElement(xmlConsulta, "//items/document/cashaccount")))
+                    if (GetElement(xmlConsulta, "//items/document/cashaccount") != "N")
                     {
                         DocumentoPago.CashAccount = "111102";
                         DocumentoPago.CashSum = double.Parse(GetElement(xmlConsulta, "//items/document/cashsum"));
@@ -125,11 +135,11 @@ namespace SAP
                     }
 
 
-                    if (!String.IsNullOrEmpty(GetElement(xmlConsulta, "//items/document/Trsfraccount")))
+                    if (!String.IsNullOrEmpty(GetElement(xmlConsulta, "//items/document/TrsfrRef")))
                     {
                         //DocumentoPago.TransferDate = pago.PagoTransferencia.TransferDate;
                         DocumentoPago.TransferReference = GetElement(xmlConsulta, "//items/document/TrsfrRef"); //pago.PagoTransferencia.TransferReference;
-                        DocumentoPago.TransferAccount = GetElement(xmlConsulta, "//items/document/Trsfraccount");// pago.PagoTransferencia.TransferAccount;
+                        //DocumentoPago.TransferAccount = GetElement(xmlConsulta, "//items/document/Trsfraccount");// pago.PagoTransferencia.TransferAccount;
                         DocumentoPago.TransferSum = double.Parse(GetElement(xmlConsulta, "//items/document/TrsfrSum")); //pago.PagoTransferencia.TransferSum;
                         montoAplicado += double.Parse(GetElement(xmlConsulta, "//items/document/TrsfrSum")); //pago.PagoTransferencia.TransferSum;
                     }
@@ -181,20 +191,23 @@ namespace SAP
                             montoAplicado += double.Parse(nodo["SumApplied"].InnerText);//tarjeta.CreditSum;
                         }
                     }
-
+                    factura_DocEntry = 0;
+                    factura_DocNum = 0;
                     RecSet = ((SAPbobsCOM.Recordset)(B1company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset)));
-                    string QryStr = "select top 1 T.\"DocEntry\", T.\"DocNum\" from oinv t where t.\"NumAtCard\" = '" + GetElement(xmlConsulta, "//items/document/document_lines/Line/Docnum") + "'";
+                    string QryStr = "select top 1 T.\"DocEntry\", T.\"DocNum\" from oinv t where t.\"NumAtCard\" = '" + GetElement(xmlConsulta, "//items/document/document_lines/Line/Docnum") + "'  AND \"CANCELED\" = 'N'";
                     RecSet.DoQuery(QryStr);
-
-                    if(RecSet.RecordCount == 0)
+                    factura_DocEntry = Convert.ToInt32(RecSet.Fields.Item(0).Value);
+                    factura_DocNum = Convert.ToInt32(RecSet.Fields.Item(1).Value);
+                    if (RecSet.RecordCount == 0)
                     {
+                        File.Move(file.FullName, @"C:\XML\Pagos\Sin_factura\" + file.Name);
+                        Log.logProc("PAGO", fileName, B1company);
                         validacion_err = true;
                         Log.logError("No hay factura asociada, ("+ GetElement(xmlConsulta, "//items/document/document_lines/Line/Docnum") +")", fileName, B1company);
                     }
                     else
                     {
-                        var documento = Convert.ToString(RecSet.Fields.Item(0).Value);
-                        DocumentoPago.Invoices.DocEntry = Convert.ToInt32(documento);
+                        DocumentoPago.Invoices.DocEntry = factura_DocEntry;
                         DocumentoPago.Invoices.InvoiceType = SAPbobsCOM.BoRcptInvTypes.it_Invoice;
                         DocumentoPago.Invoices.SumApplied = double.Parse(GetElement(xmlConsulta, "//items/document/document_lines/Line/SumApplied"));
                         DocumentoPago.Invoices.AppliedFC = double.Parse(GetElement(xmlConsulta, "//items/document/document_lines/Line/SumApplied"));

@@ -19,16 +19,20 @@ namespace SAP
         {
             string fileName = "";
             int procesados = 0;
+            string QryStr = "";
             bool validacion_err = false;
+            //SAPbobsCOM.Recordset RecSet = null;
             try
             {
                 DirectoryInfo d = new DirectoryInfo(@"C:\XML\Salidas\Cola"); //Assuming Test is your Folder
                 FileInfo[] Files = d.GetFiles("*.xml"); //Getting Text files
+                //RecSet = ((SAPbobsCOM.Recordset)(B1company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset)));
                 foreach (FileInfo file in Files)
                 {
                     fileName = file.FullName;
                     XmlDocument xmlConsulta = new XmlDocument();
                     xmlConsulta.LoadXml(System.IO.File.ReadAllText(file.FullName));
+                    //RecSet = ((SAPbobsCOM.Recordset)(B1company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset)));
 
                     SAPbobsCOM.Documents documento = B1company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.oInventoryGenExit);
 
@@ -45,16 +49,24 @@ namespace SAP
                     //documento.UserFields.Fields.Item("U_Linea_documento").Value = GetElement(xmlConsulta, "//items/document/Linea_documento");
                     XmlNodeList nodeList = GetElementNode(xmlConsulta, "//items/document/document_lines");
                     foreach (XmlNode nodo in nodeList)
-                    {  
-                        documento.Lines.ItemCode = nodo["ItemCode"].InnerText;//detalle.ItemCode;
+                    {
+
+                        //QryStr = "select \"U_NEW_COD\" from \"@ARTICULO_REF_COD\" where  \"U_OLD_COD\" = '" + nodo["ItemCode"].InnerText + "'";
+                        //RecSet.DoQuery(QryStr);
+                        //var nuevo_codigo = Convert.ToString(RecSet.Fields.Item(0).Value);
+                        //if (nuevo_codigo != "")
+                        //{
+                        //    documento.Lines.ItemCode = nuevo_codigo;
+                        //}
+                        //else
+                        //{
+                            documento.Lines.ItemCode = nodo["ItemCode"].InnerText;//detalle.ItemCode;
+                        //}
                         documento.Lines.Quantity = double.Parse(nodo["Quantity"].InnerText);
-                        //documento.Lines.Price = double.Parse(nodo["Price"].InnerText);
-                        //CAMPOS DE USUARIO
-                        //documento.Lines.UserFields.Fields.Item("U_BATCH") = nodo["U_BATCH"].InnerText;
-                        //documento.Lines.UserFields.Fields.Item("U_QuantityBatch") = double.Parse(nodo["QuantityBatch"].InnerText);
                         documento.Lines.Add();
                     }
-                    
+                    //RecSet = null;
+                    //GC.Collect();
                     int resp = documento.Add();
                     if (resp != 0)
                     {
@@ -67,7 +79,9 @@ namespace SAP
                         Log.logProc("PAGO", fileName, B1company);
                         procesados++;
                     }
+
                 }
+
                 if (validacion_err)
                 {
                     return new Respuesta
